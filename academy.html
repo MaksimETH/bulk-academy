@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BULK Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+:root {
+  --bg:          #0b0b0b;
+  --surface:     #131313;
+  --surface2:    #1a1a1a;
+  --border:      #212121;
+  --border2:     #2b2b2b;
+  --text:        #e6e6e2;
+  --text2:       #b0b0aa;
+  --muted:       #5a5a5a;
+  --muted2:      #3a3a3a;
+  --white:       #f0f0ec;
+  /* functional only — correct / done states */
+  --green:       #4fd67a;
+  --green-dim:   rgba(79,214,122,0.08);
+  --green-b:     rgba(79,214,122,0.18);
+  /* wrong state */
+  --err-dim:     rgba(220,80,80,0.08);
+  --err-b:       rgba(220,80,80,0.18);
+  --err:         #dc5050;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  display: grid;
+  grid-template-columns: 236px 1fr 272px;
+  grid-template-rows: 44px 1fr;
+  grid-template-areas:
+    "header header header"
+    "sidebar main panel";
+  height: 100vh;
+}
+
+/* ── TOPBAR ── */
+header {
+  grid-area: header;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  gap: 16px;
+}
+.logo {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.hdr-sep { width: 1px; height: 16px; background: var(--border2); }
+.hdr-rank-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.hdr-rank-val {
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: 5px;
+  background: var(--surface2);
+}
+/* override when rank achieved — make it pop white */
+.hdr-rank-val.top {
+  color: var(--white);
+  border-color: var(--border2);
+  background: var(--surface2);
+}
+.hdr-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hdr-xp-bar { width: 80px; height: 1px; background: var(--border2); }
+.hdr-xp-fill { height: 100%; background: var(--text2); transition: width 0.5s ease; }
+.hdr-xp-num { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+
+/* ── SIDEBAR ── */
+aside {
+  grid-area: sidebar;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sb-section {
+  padding: 13px 13px 5px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted2);
+  border-top: 1px solid var(--border);
+}
+.sb-section:first-child { border-top: none; }
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.sb-item:hover { background: var(--surface2); }
+.sb-item.active {
+  background: var(--surface2);
+  border-left-color: var(--white);
+}
+.sb-item.active .sb-title { color: var(--white); }
+.sb-num {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  color: var(--muted2);
+  min-width: 14px;
+  letter-spacing: 0.06em;
+}
+.sb-title { font-family: var(--sans); font-size: 11px; font-weight: 400; color: var(--muted); flex: 1; }
+.sb-item.done .sb-title { color: var(--text2); }
+.sb-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.sb-item.done .sb-dot { background: var(--green); }
+
+/* ── MAIN ── */
+main {
+  grid-area: main;
+  overflow-y: auto;
+  padding: 28px 38px 48px;
+  background: var(--bg);
+}
+.pane { display: none; }
+.pane.active { display: block; }
+
+.p-tag {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.p-tag::before { content: ''; width: 14px; height: 1px; background: var(--border2); }
+
+.p-h1 {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 21px;
+  color: var(--white);
+  margin-bottom: 7px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.p-sub {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 28px;
+  max-width: 560px;
+  line-height: 1.65;
+}
+
+/* body text */
+.body p {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text2);
+  line-height: 1.85;
+  margin-bottom: 16px;
+  max-width: 580px;
+}
+.body p strong { color: var(--white); font-weight: 500; }
+.body p em { color: var(--text); font-style: normal; font-weight: 400; }
+
+.h2 {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text2);
+  margin: 26px 0 10px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border2);
+}
+
+/* callout */
+.callout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 1px solid var(--border2);
+  padding: 12px 16px;
+  margin: 14px 0;
+  max-width: 580px;
+}
+.callout.alt { border-left-color: var(--border2); background: var(--surface2); }
+.cl-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.callout p {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text2);
+  line-height: 1.72;
+  margin: 0;
+}
+.callout p strong { color: var(--white); font-weight: 500; }
+
+/* mono code block */
+.mono-block {
+  background: #080808;
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.95;
+  color: var(--muted);
+  margin: 14px 0;
+  max-width: 580px;
+}
+.mk { color: var(--text2); }
+.mv { color: var(--white); }
+.mc { color: var(--muted2); }
+
+/* data table */
+.dt {
+  width: 100%;
+  max-width: 580px;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 11.5px;
+}
+.dt th {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 400;
+}
+.dt td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  color: var(--text2);
+  font-family: var(--sans);
+  font-weight: 300;
+}
+.dt tr:hover td { background: var(--surface); }
+.ok  { color: var(--white); font-weight: 500; }
+.no  { color: var(--muted); }
+.warn { color: var(--text2); }
+
+/* flow diagram */
+.flow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin: 14px 0;
+  max-width: 580px;
+}
+.flow-lbl {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.frow { display: flex; gap: 2px; margin-bottom: 2px; }
+.fbox {
+  flex: 1;
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--bg);
+  transition: border-color 0.12s, color 0.12s;
+  line-height: 1.45;
+}
+.fbox:hover { border-color: var(--border2); color: var(--text2); }
+.fbox.g {
+  background: var(--surface2);
+  border-color: var(--border2);
+  color: var(--text2);
+}
+.farr {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted2);
+  text-align: center;
+  margin: 3px 0;
+  letter-spacing: 6px;
+}
+
+/* lesson nav */
+.lfooter {
+  display: flex;
+  gap: 2px;
+  margin-top: 32px;
+  max-width: 580px;
+}
+.lbtn {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: center;
+}
+.lbtn:hover { border-color: var(--border2); color: var(--text2); }
+.lbtn.primary {
+  background: var(--white);
+  border-color: var(--white);
+  color: var(--bg);
+  flex: 2;
+  font-weight: 600;
+}
+.lbtn.primary:hover { background: var(--text); border-color: var(--text); }
+.lbtn:disabled { opacity: 0.18; pointer-events: none; }
+
+/* ── QUESTS ── */
+.qcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 20px;
+  margin-bottom: 2px;
+  max-width: 580px;
+}
+.qcard.answered { border-left: 1px solid var(--border2); opacity: 0.85; }
+.qc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+.qc-num {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  color: var(--muted2);
+  letter-spacing: 0.1em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.qc-q {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  line-height: 1.5;
+  max-width: 460px;
+}
+.qc-xp {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text2);
+  padding: 2px 7px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.qopts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 10px; }
+.qopt {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 300;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.4;
+}
+.qopt:hover { border-color: var(--border2); color: var(--text2); background: var(--surface); }
+/* correct answer — white highlight */
+.qopt.correct {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+}
+/* wrong answer — dim red */
+.qopt.wrong {
+  border-color: var(--err-b);
+  background: var(--err-dim);
+  color: var(--err);
+}
+.ok-mark { margin-left: auto; font-family: var(--mono); font-size: 8px; color: var(--green); flex-shrink: 0; }
+.no-mark { margin-left: auto; font-family: var(--mono); font-size: 8px; color: var(--err); flex-shrink: 0; }
+.optk { font-family: var(--mono); font-size: 8px; color: var(--muted2); min-width: 11px; flex-shrink: 0; }
+
+.qfb {
+  margin-top: 8px;
+  padding: 9px 12px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 300;
+  line-height: 1.65;
+  display: none;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.qfb.show { display: block; }
+/* correct feedback */
+.qfb.g { border-left: 2px solid var(--green); color: var(--text2); }
+/* wrong feedback */
+.qfb.r { border-left: 2px solid var(--err-b); color: var(--text2); }
+
+.qnav { display: flex; justify-content: flex-end; margin-top: 16px; max-width: 580px; }
+.qnbtn {
+  background: var(--white);
+  border: 1px solid var(--white);
+  color: var(--bg);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: none;
+}
+.qnbtn:hover { background: var(--text); border-color: var(--text); }
+.qnbtn.show { display: inline-block; }
+
+/* ── RIGHT PANEL ── */
+.rpanel {
+  grid-area: panel;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.rblock { padding: 15px 16px; border-bottom: 1px solid var(--border); }
+.rblock-title {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted2);
+  margin-bottom: 12px;
+}
+
+/* xp block */
+.xp-display { display: flex; align-items: flex-end; gap: 5px; margin-bottom: 7px; }
+.xp-big {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 28px;
+  color: var(--white);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.xp-lbl { font-family: var(--sans); font-size: 10px; color: var(--muted); margin-bottom: 2px; font-weight: 300; }
+.xp-bar { width: 100%; height: 1px; background: var(--border2); margin-bottom: 5px; }
+.xp-fill { height: 100%; background: var(--text2); transition: width 0.5s ease; }
+.xp-sub { font-family: var(--mono); font-size: 8px; color: var(--muted2); }
+
+/* rank rows */
+.rank-rows { display: flex; flex-direction: column; gap: 1px; }
+.rrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+}
+.rrow.current { background: var(--surface2); border-color: var(--border2); }
+.rrow.achieved { opacity: 0.35; }
+.rrow.locked { opacity: 0.15; }
+.rdot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.rrow.current .rdot { background: var(--white); }
+.rrow.achieved .rdot { background: var(--border2); }
+.rname {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 400;
+  flex: 1;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.rrow.current .rname { color: var(--white); font-weight: 500; }
+.rxp { font-family: var(--mono); font-size: 8px; color: var(--muted2); }
+
+/* quest log */
+.qlog { display: flex; flex-direction: column; gap: 1px; }
+.qlrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 7px;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--muted2);
+}
+.qlrow.done { color: var(--text2); }
+.qldot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.qlrow.done .qldot { background: var(--green); }
+.qlxp { margin-left: auto; font-family: var(--mono); font-size: 8px; color: var(--muted); }
+
+/* stats */
+.sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.scell { background: var(--surface2); padding: 10px; border: 1px solid var(--border); }
+.sval {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.slbl {
+  font-family: var(--mono);
+  font-size: 7px;
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CRYPOST XYESOS</div>
+  <div class="hdr-sep"></div>
+  <span class="hdr-rank-label">Rank</span>
+  <span class="hdr-rank-val" id="hdr-rank">OBSERVER</span>
+  <div class="hdr-right">
+    <div class="hdr-xp-bar"><div class="hdr-xp-fill" id="hdr-fill" style="width:0%"></div></div>
+    <span class="hdr-xp-num" id="hdr-xp">0 XP</span>
+  </div>
+</header>
+
+<aside>
+  <div class="sb-section">Lessons</div>
+  <div class="sb-item active" id="si-l0" onclick="nav('l',0)">
+    <span class="sb-num">01</span><span class="sb-title">The Problem</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-l1" onclick="nav('l',1)">
+    <span class="sb-num">02</span><span class="sb-title">Architecture</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-l2" onclick="nav('l',2)">
+    <span class="sb-num">03</span><span class="sb-title">Order Lifecycle</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-l3" onclick="nav('l',3)">
+    <span class="sb-num">04</span><span class="sb-title">Liquidity Network</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-l4" onclick="nav('l',4)">
+    <span class="sb-num">05</span><span class="sb-title">Validator Economics</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-l5" onclick="nav('l',5)">
+    <span class="sb-num">06</span><span class="sb-title">Alphanet</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-section">Quests</div>
+  <div class="sb-item" id="si-q0" onclick="nav('q',0)">
+    <span class="sb-num">Q1</span><span class="sb-title">Foundation</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-q1" onclick="nav('q',1)">
+    <span class="sb-num">Q2</span><span class="sb-title">Architecture</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-q2" onclick="nav('q',2)">
+    <span class="sb-num">Q3</span><span class="sb-title">Order Mechanics</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-q3" onclick="nav('q',3)">
+    <span class="sb-num">Q4</span><span class="sb-title">Liquidity & Vaults</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-q4" onclick="nav('q',4)">
+    <span class="sb-num">Q5</span><span class="sb-title">Economics</span><span class="sb-dot"></span>
+  </div>
+  <div class="sb-item" id="si-q5" onclick="nav('q',5)">
+    <span class="sb-num">Q6</span><span class="sb-title">Protocol Mastery</span><span class="sb-dot"></span>
+  </div>
+</aside>
+
+<main id="main">
+
+<!-- L0 -->
+<div class="pane active" id="l-0">
+  <div class="p-tag">Lesson 01 — Beginner</div>
+  <div class="p-h1">The Problem BULK Solves</div>
+  <div class="p-sub">Why the fastest general purpose blockchain still is not fast enough for professional orderbook trading and how BULK closes that gap without sacrificing decentralization.</div>
+  <div class="body">
+    <p>Solana produces one block every <strong>400 milliseconds</strong> and handles tens of thousands of transactions per second. For most applications, this is more than sufficient. For high frequency orderbook trading, it reveals a structural limitation that no amount of throughput optimization alone can fix.</p>
+    <p>Every order placement, cancellation, and fill on a standard Solana DEX must be processed as a Solana transaction and included in a block. In an active market, professional market makers update their quotes hundreds of times per second. At 400ms per block, those updates become stale before they even land creating a permanent execution disadvantage relative to centralized exchanges.</p>
+    <div class="h2">The CEX vs DEX Performance Gap</div>
+    <table class="dt">
+      <thead><tr><th>Dimension</th><th>CEX</th><th>Standard Solana DEX</th><th>BULK</th></tr></thead>
+      <tbody>
+        <tr><td>Order latency</td><td class="ok">&lt; 1ms</td><td class="no">~400ms</td><td class="ok">5–20ms</td></tr>
+        <tr><td>Gas-free orders</td><td class="ok">Yes</td><td class="no">No</td><td class="ok">Yes</td></tr>
+        <tr><td>Front-running</td><td class="ok">Mitigated</td><td class="no">High (MEV)</td><td class="ok">Eliminated (FIFO)</td></tr>
+        <tr><td>Self-custody</td><td class="no">No</td><td class="ok">Yes</td><td class="ok">Yes</td></tr>
+        <tr><td>Censorship resistance</td><td class="no">No</td><td class="ok">Yes</td><td class="ok">Yes</td></tr>
+      </tbody>
+    </table>
+    <div class="h2">The Maker's Dilemma</div>
+    <p>Market makers provide the bid and ask quotes that give everyone else a market to trade against. On a standard Solana DEX, their situation is structurally punishing: the optimistic path to placing and updating a single order requires at least <strong>two blocks roughly 800ms</strong>. Price can move significantly in that window, forcing makers to quote wider spreads to absorb the risk. Wider spreads mean worse prices for all traders.</p>
+    <p>BULK's answer is not to push more transactions through Solana's general-purpose queue. It creates a <strong>dedicated execution layer embedded directly into the validator network</strong> - a purpose-built circuit that leverages Solana's foundation without being constrained by its block timing.</p>
+    <div class="callout">
+      <div class="cl-label">BULK CTO Junaid Peer</div>
+      <p>"Think of Solana as a robust, multi-lane superhighway, ideal for millions of users. To achieve peak performance for an orderbook, we need a dedicated Formula 1 track, a specialized circuit that leverages Solana foundation for unmatched speed."</p>
+    </div>
+    <div class="h2">Core Design Principles</div>
+    <p>Three principles are non-negotiable in BULK's design. First: <strong>no sequencers and no bridges</strong> - all user assets remain as SPL tokens in onChain wallets, never leaving Solana. Second: <strong>leaderless matching</strong> - no centralized operator controls the engine; the distributed Solana validator set runs it collectively. Third: <strong>CEX parity</strong> — the trading experience must be competitive on raw performance terms or users will continue choosing custodial alternatives.</p>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" disabled>Previous</button>
+    <button class="lbtn primary" onclick="nav('l',1)">Next: Architecture</button>
+  </div>
+</div>
+
+<!-- L1 -->
+<div class="pane" id="l-1">
+  <div class="p-tag">Lesson 02 - Intermediate</div>
+  <div class="p-h1">Architecture Deep Dive</div>
+  <div class="p-sub">Four components. One seamless pipeline from trader intent to on-chain settlement - running at in-memory speed while secured by Solana's validator network.</div>
+  <div class="body">
+    <p>BULK's technical stack consists of four interconnected components: <strong>Bulk Agave</strong>, <strong>BULK Tile</strong>, <strong>BULK Net</strong>, and <strong>BULK Db</strong>. Each has a precise role, and together they create a trading system that runs at CEX speeds while remaining fully embedded in Solana's decentralized validator network.</p>
+    <div class="flow">
+      <div class="flow-lbl">System Architecture - Data Flow</div>
+      <div class="frow"><div class="fbox g" style="flex:3">Trader submits order via wallet or API</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g">BULK Net - erasure coded UDP shards - sub-20ms global propagation</div></div>
+      <div class="farr">|||</div>
+      <div class="frow">
+        <div class="fbox g">BULK Tile</div>
+        <div class="fbox g">BULK Tile</div>
+        <div class="fbox g">BULK Tile</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--muted2);text-align:center;margin:4px 0;letter-spacing:0.06em;">Running simultaneously on every Bulk Agave validator node</div>
+      <div class="farr">|||</div>
+      <div class="frow">
+        <div class="fbox">BULK DB - peer-replicated state log</div>
+        <div class="fbox">Solana L1 - final settlement</div>
+      </div>
+    </div>
+    <div class="h2">Bulk Agave: The Validator Client</div>
+    <p><strong>Bulk Agave</strong> is the core validator software - a strategic fork of Jito agave, the most widely-used Solana validator client. The fork choice is deliberate: validators running Bulk Agave continue earning <strong>Jito MEV revenue</strong> from blockspace auctions alongside BULK's trading fee share. They do not sacrifice one income stream for the other.</p>
+    <div class="h2">BULK Tile: In-Memory Matching Engine</div>
+    <p>The BULK Tile is an execution environment running entirely in RAM on every validator node. Because it operates in memory, it is completely decoupled from Solana's on-chain execution - it does not wait for block production.</p>
+    <div class="mono-block">
+<span class="mc"># BULK Tile — Core Performance</span>
+<span class="mk">matching_tick</span>     <span class="mv">25ms   </span><span class="mc">deterministic cycle interval</span>
+<span class="mk">latency_range</span>     <span class="mv">5–20ms </span><span class="mc">order receipt to confirmation</span>
+<span class="mk">fast_finality</span>     <span class="mv">~40ms  </span><span class="mc">economic confirmation</span>
+<span class="mk">matching_rule</span>     <span class="mv">FIFO   </span><span class="mc">price-time priority, deterministic</span>
+<span class="mk">order_gas</span>         <span class="mv">0      </span><span class="mc">no Solana fee on order operations</span>
+    </div>
+    <div class="h2">BULK Net: Order Propagation Layer</div>
+    <p>Before an order reaches any BULK Tile, it travels via BULK Net - a custom UDP-based propagation layer. Each order is split into <strong>8 erasure coded shards</strong>. Any validator needs only <strong>6 of the 8 shards</strong> to reconstruct the full order. Shards are fan-out broadcast to all validators simultaneously, achieving sub-20ms global dissemination while remaining robust to packet loss.</p>
+    <div class="h2">BULK Db: Fault-Tolerant State Store</div>
+    <p><strong>BULK Db</strong> is a key-value, log-structured database running on every validator node and peer-replicated across the network. It maintains the canonical log of all trading state, fills, and position data - durable storage that survives individual node failures without data loss.</p>
+    <div class="callout">
+      <div class="cl-label">Security Model</div>
+      <p>The <strong>Vault</strong> performs independent verification of every BULK cycle commitment. Any attempt to tamper with transaction data or matching results is cryptographically detected and rejected by the network. No single validator can alter outcomes.</p>
+    </div>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" onclick="nav('l',0)">Previous</button>
+    <button class="lbtn primary" onclick="nav('l',2)">Next: Order Lifecycle</button>
+  </div>
+</div>
+
+<!-- L2 -->
+<div class="pane" id="l-2">
+  <div class="p-tag">Lesson 03 - Intermediate</div>
+  <div class="p-h1">CLOB & Order Lifecycle</div>
+  <div class="p-sub">How an order travels from your wallet through the network, gets matched in memory, and finally settles on-chain.</div>
+  <div class="body">
+    <p>BULK uses a <strong>Central Limit Order Book (CLOB)</strong> for each perpetual market  the same structure used by institutional equity and derivatives exchanges. Unlike AMMs where you trade against a formula-priced pool, a CLOB maintains explicit live buy and sell orders matched at discrete intervals.</p>
+    <div class="flow">
+      <div class="flow-lbl">Order Lifecycle — Complete Path</div>
+      <div class="frow"><div class="fbox g" style="flex:3">1. Deposit USDC on Solana. Assets stay as SPL tokens in your own wallet.</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">2. Order submitted via UI, REST, WebSocket, CCXT, or FIX API</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g" style="flex:3">3. BULK Net splits order into 8 shards, UDP fan-out to all validators (&lt;20ms)</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g" style="flex:3">4. BULK Tile reconstructs from any 6 shards, adds to in-memory CLOB</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g" style="flex:3">5. Deterministic 25ms matching tick runs FIFO across all validators simultaneously</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">6. Fast economic confirmation ~40ms. Trader can act on result immediately.</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">7. Final synchronization to Solana L1 for on-chain settlement</div></div>
+    </div>
+    <div class="h2">FIFO and Anti Front Running</div>
+    <p>On standard Solana DEXes, MEV bots detect pending orders in the mempool and insert their own transactions first - extracting profit at the trader's expense. BULK eliminates this through <strong>deterministic FirstIn, FirstOut matching</strong>.</p>
+    <p>Within each 25ms tick, the execution order is determined by a <strong>cryptographic sort key</strong> derived from: the submitter's public key, a random nonce, and the current tick identifier. This key is fixed the moment the order enters the network - no party can reorder transactions within a tick. The result is mathematically verifiable and identical across every validator.</p>
+    <div class="callout alt">
+      <div class="cl-label">MEV on Standard Solana DEX</div>
+      <p>Standard Solana DEX transactions broadcast publicly before confirmation. Bots detect them, calculate profit, and bid higher priority fees to execute first. BULK's FIFO architecture closes this attack vector entirely - your order's position in the queue is cryptographically fixed from the moment it enters the network.</p>
+    </div>
+    <div class="h2">Available Perpetual Markets</div>
+    <table class="dt">
+      <thead><tr><th>Market</th><th>Max Leverage</th><th>Margin</th><th>Order Gas</th></tr></thead>
+      <tbody>
+        <tr><td>BTC / USD</td><td class="ok">20x</td><td>USDC</td><td class="ok">Free</td></tr>
+        <tr><td>ETH / USD</td><td class="ok">20x</td><td>USDC</td><td class="ok">Free</td></tr>
+        <tr><td>SOL / USD</td><td class="ok">20x</td><td>USDC</td><td class="ok">Free</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" onclick="nav('l',1)">Previous</button>
+    <button class="lbtn primary" onclick="nav('l',3)">Next: Liquidity Network</button>
+  </div>
+</div>
+
+<!-- L3 -->
+<div class="pane" id="l-3">
+  <div class="p-tag">Lesson 04 - Advanced</div>
+  <div class="p-h1">Bulk Liquidity Network</div>
+  <div class="p-sub">Angmar vaults, VRTs, and the shared liquidity layer that eliminates the opportunity cost of capital in DeFi.</div>
+  <div class="body">
+    <p>In most DeFi protocols, liquidity is siloed. Assets staked for validator rewards cannot simultaneously serve as trading collateral. Assets locked in a lending pool cannot also provide orderbook depth. Users are forced to choose — and whatever they don't choose represents lost yield. The Bulk Liquidity Network resolves this through two mechanisms: <strong>Angmar Vaults</strong> and <strong>Vault Representation Tokens (VRTs)</strong>.</p>
+    <div class="h2">Angmar Vaults</div>
+    <p>Angmar is BULK's permissionless multi-asset vault protocol. When a user deposits assets into an Angmar vault, those assets are deployed across multiple use cases simultaneously — staking, lending, and serving as exchange collateral — rather than being locked in a single application.</p>
+    <div class="flow">
+      <div class="flow-lbl">Angmar Vault - Capital Deployment</div>
+      <div class="frow"><div class="fbox g" style="flex:3">Deposit SOL into Angmar Vault. Receive VRTs in return.</div></div>
+      <div class="farr">|||</div>
+      <div class="frow">
+        <div class="fbox g">Validator staking yield</div>
+        <div class="fbox g">BULK exchange collateral</div>
+        <div class="fbox g">Lending pool yield</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--muted2);text-align:center;margin-top:8px;letter-spacing:0.06em;">All simultaneously - maximum capital efficiency</div>
+    </div>
+    <div class="h2">Vault Representation Tokens (VRTs)</div>
+    <p>When assets enter an Angmar vault, the depositor receives <strong>VRTs</strong> - tokenized receipts representing their vault position. These VRTs can be used elsewhere in the BULK ecosystem while the underlying assets continue earning yield across all deployed strategies. The depositor loses no optionality by committing capital to the vault.</p>
+    <div class="callout">
+      <div class="cl-label">No Opportunity Cost</div>
+      <p>Depositing SOL into Angmar can simultaneously earn <strong>SOL staking rewards</strong> while the vault's VRTs serve as <strong>collateral for leveraged trading</strong> on BULK Exchange. A position that earns passive yield and enables active trading at the same time. Traditional DeFi does not allow this.</p>
+    </div>
+    <div class="h2">Dynamic Liquidity Reallocation</div>
+    <p>The Bulk Liquidity Layer continuously monitors yield opportunities across all connected protocols and reallocates automatically. When BULK orderbook volume surges, more capital shifts toward market making, tightening spreads. When lending pool utilization spikes, the vault captures that yield instead. Capital is always directed toward its highest return use case without user action.</p>
+    <div class="callout alt">
+      <div class="cl-label">Traditional DeFi Limitation</div>
+      <p>Standard AMM pools and lending protocols are static. Liquidity sits in a single application regardless of whether better opportunities exist elsewhere. Reallocation requires manual withdrawals, redeposits, and transaction costs. Angmar eliminates this friction entirely.</p>
+    </div>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" onclick="nav('l',2)">Previous</button>
+    <button class="lbtn primary" onclick="nav('l',4)">Next: Validator Economics</button>
+  </div>
+</div>
+
+<!-- L4 -->
+<div class="pane" id="l-4">
+  <div class="p-tag">Lesson 05 — Intermediate</div>
+  <div class="p-h1">Validator Economics</div>
+  <div class="p-sub">How BULK creates a new revenue stream for Solana validators and why this produces a self-reinforcing growth loop for the entire protocol.</div>
+  <div class="body">
+    <p>BULK is not asking validators to take on extra infrastructure costs as a public good. It creates a direct economic benefit that makes running Bulk Agave a rational self-interested choice while simultaneously strengthening the decentralization and security of the entire Solana network.</p>
+    <div class="h2">Current Solana Validator Revenue</div>
+    <div class="mono-block">
+<span class="mc"># Approximate Validator Revenue Breakdown (2024)</span>
+<span class="mk">inflation_rewards</span>  <span class="mv">~76%</span>   <span class="mc">from SOL issuance to stakers</span>
+<span class="mk">jito_mev_tips</span>      <span class="mv">~14%</span>   <span class="mc">block auction revenue via Jito</span>
+<span class="mk">priority_fees</span>      <span class="mv">~9%</span>    <span class="mc">user-paid transaction priority</span>
+<span class="mk">other</span>              <span class="mv">~1%</span>    <span class="mc">base fees, miscellaneous</span>
+    </div>
+    <div class="h2">The 12.5% BULK Fee Share</div>
+    <p>Bulk Agave validators receive <strong>12.5% of all taker exchange fees</strong> generated on BULK, distributed proRata by stake weight. This is additive it supplements existing Jito MEV and inflation revenues rather than replacing them.</p>
+    <div class="callout">
+      <div class="cl-label">Estimated Impact</div>
+      <p>The 12.5% fee distribution is projected to increase annualized validator returns by approximately <strong>1–2%</strong>. For validators earning millions in staking rewards annually, a structural new revenue stream with protocol-level distribution is a material improvement to the entire Solana validator economics.</p>
+    </div>
+    <div class="h2">The BULK Economic Flywheel</div>
+    <div class="flow">
+      <div class="flow-lbl">Self-Reinforcing Growth Loop</div>
+      <div class="frow"><div class="fbox g" style="flex:3">More traders use BULK volume increases fee revenue grows</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">12.5% of taker fees distributed to all Bulk Agave validators</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">Higher validator rewards - more validators adopt Bulk Agave</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g" style="flex:3">More validators running BULK - more decentralized - more trusted - more traders</div></div>
+    </div>
+    <div class="h2">Censorship Resistance by Architecture</div>
+    <p>Because BULK runs on the same globally distributed validator set that secures Solana L1, no single entity controls the matching engine. No operator can freeze user assets, censor specific orders, or manipulate matching results. A blacklist applied by one validator is overridden by the consensus of the remaining network. This is not a policy commitment, it is a structural property of embedding the exchange inside the validator layer.</p>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" onclick="nav('l',3)">Previous</button>
+    <button class="lbtn primary" onclick="nav('l',5)">Next: Alphanet</button>
+  </div>
+</div>
+
+<!-- L5 -->
+<div class="pane" id="l-5">
+  <div class="p-tag">Lesson 06 - Beginner</div>
+  <div class="p-h1">Alphanet - Getting Started</div>
+  <div class="p-sub">How to access BULK today, what is available on the Alphanet testnet, and how to connect programmatically via professional API interfaces.</div>
+  <div class="body">
+    <div class="callout">
+      <div class="cl-label">Access Point</div>
+      <p>BULK Alphanet is live at <strong>alphanet.bulk.trade</strong>. A standard Solana wallet (Phantom, Solflare) with SPL assets is all that is required. No cross-chain bridge, no additional account creation, no KYC at the protocol level.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-lbl">Alphanet Onboarding Flow</div>
+      <div class="frow"><div class="fbox g" style="flex:3">1. Navigate to alphanet.bulk.trade</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">2. Connect Solana wallet (Phantom / Solflare)</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox" style="flex:3">3. Deposit USDC as collateral - assets remain on Solana as SPL tokens</div></div>
+      <div class="farr">|||</div>
+      <div class="frow"><div class="fbox g" style="flex:3">4. Select market, set leverage up to 20x, place order - gasless</div></div>
+    </div>
+    <div class="h2">API Interfaces</div>
+    <div class="mono-block">
+<span class="mc"># BULK API Interfaces</span>
+<span class="mk">CCXT</span>   <span class="mv">Cross-exchange library   </span><span class="mc">Python/JS standard trading library</span>
+<span class="mk">FIX</span>    <span class="mv">Financial Info eXchange </span><span class="mc">institutional grade, ultra-low latency</span>
+<span class="mk">REST</span>   <span class="mv">HTTP endpoints          </span><span class="mc">order management, account data, market info</span>
+<span class="mk">WS</span>     <span class="mv">WebSocket streams       </span><span class="mc">real-time orderbook, trades, positions</span>
+    </div>
+    <div class="h2">Roadmap</div>
+    <table class="dt">
+      <thead><tr><th>Phase</th><th>Status</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Alphanet</td><td class="ok">Live</td><td>BTC/ETH/SOL perps, 20x leverage, API access</td></tr>
+        <tr><td>Public Testnet</td><td class="warn">Incoming</td><td>Broader validator participation, more markets</td></tr>
+        <tr><td>Mainnet</td><td class="no">Upcoming</td><td>Full production deployment on Solana L1</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="cl-label">Backing</div>
+      <p>BULK raised an <strong>$8M seed round</strong> led by 6th Man Ventures and Robot Ventures. Notable investors include Wintermute, Anatoly Yakovenko (Solana co-founder), Delphi Digital, and Multicoin Capital. Wintermute handles market making from day one.</p>
+    </div>
+    <p>All six lessons are complete. Navigate to the Quests section in the sidebar to test your knowledge. Completing quests earns XP and advances your rank toward Protocol Master.</p>
+  </div>
+  <div class="lfooter">
+    <button class="lbtn" onclick="nav('l',4)">Previous</button>
+    <button class="lbtn primary" onclick="nav('q',0)">Start Quests</button>
+  </div>
+</div>
+
+<!-- QUEST PANES: rendered by JS -->
+<div class="pane" id="q-0">
+  <div class="p-tag">Quest 01 - Foundation</div>
+  <div class="p-h1">Foundation Check</div>
+  <div class="p-sub">Three questions on why BULK exists and the core problem it addresses. Each correct answer earns 50 XP.</div>
+  <div id="qs-0"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-0" onclick="nav('q',1)">Next Quest</button></div>
+</div>
+<div class="pane" id="q-1">
+  <div class="p-tag">Quest 02 - Architecture</div>
+  <div class="p-h1">Architecture Probe</div>
+  <div class="p-sub">Four questions on the four BULK components and how they fit together. Each correct answer earns 75 XP.</div>
+  <div id="qs-1"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-1" onclick="nav('q',2)">Next Quest</button></div>
+</div>
+<div class="pane" id="q-2">
+  <div class="p-tag">Quest 03 - Order Mechanics</div>
+  <div class="p-h1">Order Mechanics</div>
+  <div class="p-sub">Four questions on the CLOB, FIFO matching, and order lifecycle. Each correct answer earns 75 XP.</div>
+  <div id="qs-2"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-2" onclick="nav('q',3)">Next Quest</button></div>
+</div>
+<div class="pane" id="q-3">
+  <div class="p-tag">Quest 04 — Liquidity</div>
+  <div class="p-h1">Liquidity & Vaults</div>
+  <div class="p-sub">Three questions on Angmar, VRTs, and dynamic liquidity allocation. Each correct answer earns 100 XP.</div>
+  <div id="qs-3"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-3" onclick="nav('q',4)">Next Quest</button></div>
+</div>
+<div class="pane" id="q-4">
+  <div class="p-tag">Quest 05 - Economics</div>
+  <div class="p-h1">Validator Economics</div>
+  <div class="p-sub">Three questions on validator incentives and the BULK flywheel. Each correct answer earns 100 XP.</div>
+  <div id="qs-4"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-4" onclick="nav('q',5)">Next Quest</button></div>
+</div>
+<div class="pane" id="q-5">
+  <div class="p-tag">Quest 06 - Mastery</div>
+  <div class="p-h1">Protocol Mastery</div>
+  <div class="p-sub">Five advanced questions across the full protocol. Each correct answer earns 150 XP.</div>
+  <div id="qs-5"></div>
+  <div class="qnav"><button class="qnbtn" id="qn-5" onclick="showDone()">View Final Results</button></div>
+</div>
+
+<!-- DONE -->
+<div class="pane" id="l-done">
+  <div class="p-tag">Complete</div>
+  <div class="p-h1">Academy Complete</div>
+  <div class="p-sub" id="done-sub"></div>
+  <div class="body" id="done-body"></div>
+</div>
+
+</main>
+
+<div class="rpanel">
+  <div class="rblock">
+    <div class="rblock-title">Experience Points</div>
+    <div class="xp-display">
+      <div class="xp-big" id="p-xp">0</div>
+      <div class="xp-lbl">XP</div>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" id="p-xp-bar" style="width:0%"></div></div>
+    <div class="xp-sub" id="p-xp-next">0 / 150 to READER</div>
+  </div>
+  <div class="rblock">
+    <div class="rblock-title">Rank Ladder</div>
+    <div class="rank-rows" id="rank-rows"></div>
+  </div>
+  <div class="rblock">
+    <div class="rblock-title">Quest Log</div>
+    <div class="qlog" id="qlog"></div>
+  </div>
+  <div class="rblock">
+    <div class="rblock-title">Stats</div>
+    <div class="sgrid">
+      <div class="scell"><div class="sval" id="st-l">0/6</div><div class="slbl">Lessons</div></div>
+      <div class="scell"><div class="sval" id="st-q">0/6</div><div class="slbl">Quests</div></div>
+      <div class="scell"><div class="sval" id="st-c">0</div><div class="slbl">Correct</div></div>
+      <div class="scell"><div class="sval" id="st-x">0</div><div class="slbl">XP Earned</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RANKS = [
+  {name:'OBSERVER',       xp:0    },
+  {name:'READER',         xp:150  },
+  {name:'ANALYST',        xp:350  },
+  {name:'OPERATOR',       xp:600  },
+  {name:'VALIDATOR',      xp:900  },
+  {name:'ARCHITECT',      xp:1200 },
+  {name:'CONTRIBUTOR',    xp:1600 },
+  {name:'PROTOCOL MASTER',xp:2100 },
+];
+
+const QD = [
+  // set 0 - Foundation (50 XP)
+  {s:0,xp:50,q:'What is the approximate block time on Solana that creates a latency problem for orderbook trading?',
+   o:['~10ms','~100ms','~400ms','~2000ms'],a:2,
+   e:'Solana produces one block roughly every 400ms. This is fast for a general-purpose L1 but far too slow for professional orderbook trading where market makers update quotes hundreds of times per second.'},
+  {s:0,xp:50,q:'What does "leaderless" mean in the context of BULK?',
+   o:['There are no gas fees on BULK','BULK has no token with a governance leader','There is no centralized matching operator the distributed Solana validator set runs matching collectively','Validators have no leader node for block production'],a:2,
+   e:'"Leaderless" means no single entity or centralized operator controls the matching engine. The distributed Solana validator set thousands of nodes globally - collectively runs the CLOB. No one can be censored or shut down by attacking a single point.'},
+  {s:0,xp:50,q:'Why does BULK describe its approach as a "Formula 1 track on top of Solana\'s highway"?',
+   o:['BULK is faster than Solana at general transactions','BULK creates a dedicated purpose-built execution lane for orderbook trading without leaving Solana','BULK replaces Solana for trading applications','BULK uses a separate consensus mechanism for speed'],a:1,
+   e:'The analogy captures BULK\'s design: Solana is a robust general-purpose highway. BULK adds a dedicated high-performance lane specifically optimized for orderbook trading — embedded inside the existing infrastructure rather than building a separate road.'},
+  // set 1 — Architecture (75 XP)
+  {s:1,xp:75,q:'Why did BULK fork Jito-agave instead of the standard Solana Labs validator client?',
+   o:['Jito-agave has faster consensus','So validators retain full Jito MEV revenue alongside BULK trading fee share','Jito-agave has better hardware requirements','Jito-agave is officially endorsed by Solana Foundation'],a:1,
+   e:'Jito-agave is the source of Jito MEV revenue — block auction income that represents roughly 14% of validator earnings. Forking it means validators running Bulk Agave keep all Jito income AND earn BULK fee share, with no trade-off between the two.'},
+  {s:1,xp:75,q:'How many erasure coded shards does BULK Net split each order into, and how many are required for reconstruction?',
+   o:['4 shards, any 3','8 shards, any 6','16 shards, any 10','6 shards, all 6'],a:1,
+   e:'BULK Net splits each order into 8 shards using erasure coding. Any 6 of the 8 are sufficient for reconstruction - meaning up to 2 shards (25%) can be lost to packet loss with zero impact on delivery.'},
+  {s:1,xp:75,q:'What is BULK Db\'s primary function?',
+   o:['It is the in-memory matching engine','It handles UDP order propagation','It is a peer-replicated key-value log for durable storage of all trading state and fills','It verifies final settlement on Solana L1'],a:2,
+   e:'BULK Db is a key-value, log-structured database that runs on every validator node and is peer-replicated across the network. It stores the canonical log of all trading state, fills, and position data - surviving individual node failures without data loss.'},
+  {s:1,xp:75,q:'What does the Vault component do in BULK\'s security model?',
+   o:['It holds user USDC deposits','It independently verifies every BULK cycle commitment and detects any tampered data','It manages VRT issuance for Angmar Vaults','It settles trades on Solana L1'],a:1,
+   e:'The Vault performs independent verification of every BULK cycle commitment, ensuring cryptographic correctness of all state transitions. Any tampering by any validator is immediately detected and rejected by the network.'},
+  // set 2 — Order Mechanics (75 XP)
+  {s:2,xp:75,q:'What type of matching model does BULK use for perpetual markets?',
+   o:['AMM (x*y=k formula)','RFQM (Request for Quote)','CLOB (Central Limit Order Book)','Batch auction'],a:2,
+   e:'BULK uses a Central Limit Order Book the same model used by institutional equity and derivatives exchanges like NASDAQ. It maintains explicit sorted lists of live bids and asks, matching them at price-time priority every 25ms.'},
+  {s:2,xp:75,q:'What three components make up BULK\'s FIFO cryptographic sort key?',
+   o:['Block hash + gas fee + timestamp','Public key + random nonce + current tick identifier','Order size + market ID + slot number','Validator ID + transaction hash + fee'],a:1,
+   e:'The sort key is: submitter\'s public key + random nonce + current tick identifier. It is fixed the moment the order enters the network, making the ordering within each 25ms tick deterministic, verifiable, and impossible to reorder — eliminating front-running.'},
+  {s:2,xp:75,q:'Where do user assets reside while actively trading on BULK?',
+   o:['In a BULK custodial multisig','On a BULK sidechain','Locked in a Solana bridge contract','In the user\'s own wallet as SPL tokens on Solana'],a:3,
+   e:'User assets remain as SPL tokens in the user\'s own on-chain wallet at all times. This is a core design principle: no bridges, no custodial accounts, no external chains. Assets never leave Solana.'},
+  {s:2,xp:75,q:'What is "fast economic confirmation" on BULK and what does it enable?',
+   o:['The instant the order is submitted','~40ms after matching - sufficient for a trader to immediately act on a fill','The Solana L1 settlement time','The time to propagate shards globally'],a:1,
+   e:'Fast economic confirmation (~40ms) is the point at which the matching result is accepted across the validator set and the trader can immediately act on the fill - open a hedge, withdraw, etc. Final L1 synchronization follows afterward.'},
+  // set 3 — Liquidity (100 XP)
+  {s:3,xp:100,q:'What is the core innovation of Angmar Vaults compared to standard DeFi protocols?',
+   o:['They provide higher APY than standard staking','They allow assets to be deployed across staking, lending, and exchange collateral simultaneously with no opportunity cost','They automate trading strategies for vault depositors','They convert any asset to USDC automatically'],a:1,
+   e:'Angmar Vaults aggregate deposits and deploy them across multiple use cases simultaneously. Traditional DeFi forces you to choose: stake OR lend OR trade. Angmar removes that constraint - your deposited SOL can earn staking yield while also serving as exchange collateral at the same time.'},
+  {s:3,xp:100,q:'What do users receive when depositing assets into an Angmar Vault?',
+   o:['USDC stablecoins at a fixed rate','BULK governance tokens','VRTs - Vault Representation Tokens that represent their vault position','A proportional share of exchange trading fees'],a:2,
+   e:'Depositors receive VRTs (Vault Representation Tokens) - tokenized receipts representing their vault position. VRTs can be used as collateral elsewhere in the BULK ecosystem while the underlying deposited assets continue earning yield across all strategies.'},
+  {s:3,xp:100,q:'How does the Bulk Liquidity Layer respond when a lending pool\'s USDC utilization rate spikes?',
+   o:['It pauses vault operations until utilization normalizes','It increases exchange leverage limits to use more USDC','It automatically shifts more vault capital toward the lending pool to capture the higher available yield','It alerts users to manually rebalance their positions'],a:2,
+   e:'The Bulk Liquidity Layer continuously monitors yield opportunities and reallocates automatically. When lending pool utilization spikes, higher interest rates are available - so the vault shifts capital there to capture that yield. Capital always flows to its highest-return use case without user action.'},
+  // set 4 — Economics (100 XP)
+  {s:4,xp:100,q:'What percentage of BULK taker exchange fees is distributed to Bulk Agave validators?',
+   o:['5%','10%','12.5%','25%'],a:2,
+   e:'12.5% of all taker exchange fees are distributed to validators running the Bulk Agave client, pro-rata by stake weight. This is additive to existing revenue streams - validators keep all Jito MEV income on top.'},
+  {s:4,xp:100,q:'The BULK flywheel describes a self-reinforcing loop. What is the correct sequence?',
+   o:[
+     'More validators → more fees → more traders → more decentralization',
+     'More fees → more validators → more decentralization → more traders → more fees',
+     'More traders → more fees → more validators adopt Bulk Agave → more decentralized → more trusted → more traders',
+     'More volume → lower fees → more validators → lower costs → more traders'
+   ],a:2,
+   e:'The correct sequence: more traders → higher volume → more fees generated → 12.5% to validators → higher validator returns → more validators adopt Bulk Agave → more decentralized and trusted network → attracts more traders. Each step reinforces the next.'},
+  {s:4,xp:100,q:'By approximately how much does the BULK fee share increase annualized validator returns?',
+   o:['0.1-0.2%','1-2%','5–8%','10-15%'],a:1,
+   e:'The 12.5% BULK fee share is projected to increase annualized validator returns by approximately 1–2%. Given that inflation rewards represent the majority of validator income, a structural new revenue stream with protocol-level distribution is a material economic improvement.'},
+  // set 5 — Mastery (150 XP)
+  {s:5,xp:150,q:'A market maker needs to cancel and repost a quote on a standard Solana DEX. What is the realistic minimum time?',
+   o:['~20ms','~200ms','~800ms (two Solana slots minimum)','~4000ms'],a:2,
+   e:'Even optimistically, two Solana transactions require two slots - approximately 800ms. In practice, with congestion and retries, this is significantly longer. BULK reduces the equivalent operation to 5–40ms via the in-memory BULK Tile.'},
+  {s:5,xp:150,q:'If BULK Net loses 3 of 8 order shards during propagation, what is the outcome?',
+   o:['The order fails and must be resubmitted','The order is delayed until missing shards arrive via retry','The order reconstructs successfully - only 6 of 8 shards are required','The order is partially filled proportional to shards received'],a:2,
+   e:'BULK Net uses erasure coding: any 6 of 8 shards are sufficient for full reconstruction. Losing 3 shards means 5 remain - just below the threshold. But losing 2 shards (which is more typical of network packet loss) has zero impact. The design tolerates 25% shard loss.'},
+  {s:5,xp:150,q:'What is the fundamental difference between a CLOB and an AMM in how trades execute?',
+   o:[
+     'CLOBs are on-chain; AMMs are offChain',
+     'A CLOB matches explicit orders at specific prices from real participants; an AMM prices against a pooled formula with no individual orders',
+     'CLOBs require more gas than AMMs per transaction',
+     'AMMs support perpetual contracts; CLOBs only support spot'
+   ],a:1,
+   e:'A CLOB maintains explicit, visible buy and sell orders at specific prices submitted by real participants, a professional market structure. An AMM determines pricing via a mathematical formula (e.g. x*y=k) against a liquidity pool with no individual orders. CLOBs enable tight spreads, real price discovery, and professional market making.'},
+  {s:5,xp:150,q:'VRTs in Angmar Vaults solve which specific DeFi problem?',
+   o:[
+     'Impermanent loss in AMM liquidity pools',
+     'Slippage on large market orders in CLOBs',
+     'Opportunity cost — assets locked in one application cannot simultaneously earn yield in another',
+     'Front-running of vault rebalancing transactions'
+   ],a:2,
+   e:'VRTs solve opportunity cost. Traditional DeFi forces a choice: stake OR provide liquidity OR use as collateral. VRTs allow the deposited asset to do all three simultaneously - the depositor holds VRTs as collateral while the vault deploys the underlying asset across all yield strategies at once.'},
+  {s:5,xp:150,q:'How does BULK\'s censorship resistance differ from a DEX that uses a centralized sequencer?',
+   o:[
+     'BULK uses encryption; centralized sequencers do not',
+     'BULK requires KYC; centralized sequencers do not',
+     'BULK runs inside Solana\'s distributed validator set - no single entity controls matching. A centralized sequencer is a single point of failure and control.',
+     'BULK settles on Solana; centralized sequencers settle on Ethereum'
+   ],a:2,
+   e:'A centralized sequencer is a single operator that can be pressured, hacked, or shut down - creating a single point of censorship. BULK runs inside the same globally distributed validator set securing Solana L1. No single entity controls matching. Any censorship attempt by one validator is overridden by the remaining network.'},
+];
+
+let totalXP = 0;
+let correct = 0;
+let lessonsRead = new Set();
+let questsDone = new Set();
+let qAnswered = {};
+
+function getRankIdx() {
+  for(let i = RANKS.length-1; i >= 0; i--) {
+    if(totalXP >= RANKS[i].xp) return i;
+  }
+  return 0;
+}
+
+function ui() {
+  const ri = getRankIdx();
+  const r = RANKS[ri];
+  const nr = RANKS[ri+1];
+  const rel = totalXP - r.xp;
+  const tot = nr ? nr.xp - r.xp : 1;
+  const pct = nr ? Math.min(100, Math.round(rel/tot*100)) : 100;
+
+  document.getElementById('hdr-rank').textContent = r.name;
+  document.getElementById('hdr-xp').textContent = totalXP + ' XP';
+  document.getElementById('hdr-fill').style.width = pct + '%';
+  document.getElementById('p-xp').textContent = totalXP;
+  document.getElementById('p-xp-bar').style.width = pct + '%';
+  document.getElementById('p-xp-next').textContent = nr ? rel + ' / ' + tot + ' to ' + nr.name : 'Max rank achieved';
+
+  // rank rows
+  const rr = document.getElementById('rank-rows');
+  rr.innerHTML = '';
+  RANKS.forEach((rk,i) => {
+    const d = document.createElement('div');
+    d.className = 'rrow ' + (i < ri ? 'achieved' : i === ri ? 'current' : 'locked');
+    d.innerHTML = `<div class="rdot"></div><div class="rname">${rk.name}</div><div class="rxp">${rk.xp}</div>`;
+    rr.appendChild(d);
+  });
+
+  // quest log
+  const ql = document.getElementById('qlog');
+  ql.innerHTML = '';
+  const labs = ['Foundation','Architecture','Order Mechanics','Liquidity & Vaults','Economics','Protocol Mastery'];
+  labs.forEach((l,i) => {
+    const done = questsDone.has(i);
+    const earned = (qAnswered[i]||0) * QD.filter(q=>q.s===i)[0].xp;
+    const d = document.createElement('div');
+    d.className = 'qlrow' + (done ? ' done' : '');
+    d.innerHTML = `<div class="qldot"></div><span>${l}</span>${done ? '<span class="qlxp">+'+earned+' XP</span>' : ''}`;
+    ql.appendChild(d);
+  });
+
+  // stats
+  document.getElementById('st-l').textContent = lessonsRead.size + '/6';
+  document.getElementById('st-q').textContent = questsDone.size + '/6';
+  document.getElementById('st-c').textContent = correct;
+  document.getElementById('st-x').textContent = totalXP;
+}
+
+function buildQCards() {
+  for(let s = 0; s < 6; s++) {
+    const con = document.getElementById('qs-' + s);
+    QD.filter(q=>q.s===s).forEach((q, qi) => {
+      const gi = QD.indexOf(q);
+      const c = document.createElement('div');
+      c.className = 'qcard';
+      c.id = 'qc-' + gi;
+      c.innerHTML = `
+        <div class="qc-num">Question ${qi+1} of ${QD.filter(x=>x.s===s).length}</div>
+        <div class="qc-top">
+          <div class="qc-q">${q.q}</div>
+          <div class="qc-xp">+${q.xp} XP</div>
+        </div>
+        <div class="qopts">
+          ${q.o.map((o,oi)=>`<div class="qopt" id="qo-${gi}-${oi}" onclick="ans(${gi},${oi})"><span class="optk">${String.fromCharCode(65+oi)}</span>${o}</div>`).join('')}
+        </div>
+        <div class="qfb" id="qf-${gi}"></div>
+      `;
+      con.appendChild(c);
+    });
+  }
+}
+
+function ans(gi, chosen) {
+  const q = QD[gi];
+  const card = document.getElementById('qc-' + gi);
+  if(card.classList.contains('answered')) return;
+
+  q.o.forEach((_,oi) => {
+    const el = document.getElementById('qo-' + gi + '-' + oi);
+    el.onclick = null;
+  });
+
+  const fb = document.getElementById('qf-' + gi);
+  const chosenEl = document.getElementById('qo-' + gi + '-' + chosen);
+
+  if(chosen === q.a) {
+    chosenEl.classList.add('correct');
+    chosenEl.innerHTML += '<span class="ok-mark">+' + q.xp + ' XP</span>';
+    fb.className = 'qfb show g';
+    fb.textContent = q.e;
+    totalXP += q.xp;
+    correct++;
+    card.classList.add('answered');
+    qAnswered[q.s] = (qAnswered[q.s]||0) + 1;
+  } else {
+    chosenEl.classList.add('wrong');
+    chosenEl.innerHTML += '<span class="no-mark">wrong</span>';
+    document.getElementById('qo-' + gi + '-' + q.a).classList.add('correct');
+    fb.className = 'qfb show r';
+    fb.textContent = q.e;
+    card.classList.add('answered');
+  }
+
+  checkSet(q.s);
+  ui();
+}
+
+function checkSet(s) {
+  const qs = QD.filter(q=>q.s===s);
+  const allDone = qs.every(q => document.getElementById('qc-'+QD.indexOf(q)).classList.contains('answered'));
+  if(allDone) {
+    questsDone.add(s);
+    document.getElementById('si-q'+s).classList.add('done');
+    const nb = document.getElementById('qn-'+s);
+    if(nb) nb.classList.add('show');
+    ui();
+  }
+}
+
+function nav(type, idx) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(s => s.classList.remove('active'));
+
+  if(type === 'l') {
+    document.getElementById('l-'+idx).classList.add('active');
+    document.getElementById('si-l'+idx).classList.add('active');
+    lessonsRead.add(idx);
+    document.getElementById('si-l'+idx).classList.add('done');
+  } else {
+    document.getElementById('q-'+idx).classList.add('active');
+    document.getElementById('si-q'+idx).classList.add('active');
+  }
+  document.getElementById('main').scrollTop = 0;
+  ui();
+}
+
+function showDone() {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('l-done').classList.add('active');
+  const ri = getRankIdx();
+  document.getElementById('done-sub').textContent = 'Final rank: ' + RANKS[ri].name + ' — ' + totalXP + ' XP earned across ' + QD.length + ' questions.';
+  document.getElementById('done-body').innerHTML = `
+    <div class="callout"><div class="cl-label">Final Results</div>
+    <p>Total XP: <strong>${totalXP}</strong><br>
+    Rank: <strong>${RANKS[ri].name}</strong><br>
+    Quests completed: <strong>${questsDone.size} / 6</strong><br>
+    Correct answers: <strong>${correct} / ${QD.length}</strong><br>
+    Lessons read: <strong>${lessonsRead.size} / 6</strong></p></div>
+  `;
+}
+
+buildQCards();
+ui();
+</script>
+</body>
+</html>
